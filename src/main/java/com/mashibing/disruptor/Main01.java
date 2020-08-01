@@ -3,13 +3,22 @@ package com.mashibing.disruptor;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 import java.nio.ByteBuffer;
 
 public class Main01
 {
+
+
+    /**
+     * 通过事件来传递数据
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception
     {
         // The factory for the event
@@ -19,7 +28,12 @@ public class Main01
         int bufferSize = 1024;
 
         // Construct the Disruptor
-        Disruptor<LongEvent> disruptor = new Disruptor<>(factory, bufferSize, Executors.defaultThreadFactory());
+        Disruptor<LongEvent> disruptor = new Disruptor<>(factory,
+                                                         bufferSize,//ringbuffer大小
+                                                         Executors.defaultThreadFactory(),//线程工厂
+                                                         ProducerType.SINGLE,//单个生成者
+                                                         new YieldingWaitStrategy()//等待策略
+                                                     );
 
         // Connect the handler
         disruptor.handleEventsWith(new LongEventHandler());
@@ -35,7 +49,7 @@ public class Main01
         try
         {
             LongEvent event = ringBuffer.get(sequence); // Get the entry in the Disruptor
-            // for the sequence
+            // for the sequenceEventTranslator
             event.set(8888L);  // Fill with data
         }
         finally

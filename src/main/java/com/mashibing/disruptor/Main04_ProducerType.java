@@ -1,6 +1,7 @@
 package com.mashibing.disruptor;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -43,6 +44,7 @@ public class Main04_ProducerType
             service.submit(()-> {
                 System.out.printf("Thread %s ready to start!\n", threadNum );
                 try {
+                    //50个await才可以往下走，类似集合点了
                     barrier.await();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -51,9 +53,12 @@ public class Main04_ProducerType
                 }
 
                 for (int j = 0; j < 100; j++) {
-                    ringBuffer.publishEvent((event, sequence) -> {
-                        event.set(threadNum);
-                        System.out.println("生产了 " + threadNum);
+                    ringBuffer.publishEvent(new EventTranslator<LongEvent>() {
+                        @Override
+                        public void translateTo(LongEvent event, long sequence) {
+                            event.set(threadNum);
+                            System.out.println("生产了 " + threadNum);
+                        }
                     });
                 }
 

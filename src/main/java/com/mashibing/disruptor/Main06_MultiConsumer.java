@@ -1,5 +1,6 @@
 package com.mashibing.disruptor;
 
+import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -24,6 +25,7 @@ public class Main06_MultiConsumer
         // Connect the handlers
         LongEventHandler h1 = new LongEventHandler();
         LongEventHandler h2 = new LongEventHandler();
+        //配两个handler
         disruptor.handleEventsWith(h1, h2);
 
         // Start the Disruptor, starts all threads running
@@ -49,9 +51,12 @@ public class Main06_MultiConsumer
                 }
 
                 for (int j = 0; j < 10; j++) {
-                    ringBuffer.publishEvent((event, sequence) -> {
-                        event.set(threadNum);
-                        System.out.println("生产了 " + threadNum);
+                    ringBuffer.publishEvent(new EventTranslator<LongEvent>() {
+                        @Override
+                        public void translateTo(LongEvent event, long sequence) {
+                            event.set(threadNum);
+                            System.out.println("生产了 " + threadNum);
+                        }
                     });
                 }
 
